@@ -3,7 +3,7 @@ import { CurrencyRate } from "../model/CurrencyRate.js";
 import { RateProvider } from "../model/RateProvider.js";
 import { phoneNumberData } from "../../sources/config/phoneNumberData.js";
 import { API_URL } from "../../sources/config/apiConfig.js";
-import { bankNames } from "../../sources/config/bankNames.js";
+import { bankNames } from "../../sources/config/providerNames.js";
 
 // Fetches rates from API with fallback to cached data
 async function fetchAllProviderRatesData() {
