@@ -2,6 +2,7 @@ export const PROVIDER_TYPE = {
   BANK: "bank",
   EXCHANGE: "exchange",
   CRYPTO_EXCHANGE: "crypto-exchange",
+  OTHER: "other",
 };
 
 export const FILTER_PROVIDER_TYPE = {
@@ -9,6 +10,7 @@ export const FILTER_PROVIDER_TYPE = {
   BANKS: "banks",
   EXCHANGES: "exchanges",
   CRYPTO_EXCHANGES: "crypto-exchanges",
+  OTHER: "other",
 };
 
 export const SORT_OPTIONS = {

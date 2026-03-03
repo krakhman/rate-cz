@@ -2,6 +2,7 @@ const PROVIDER_TYPE = {
   BANK: "bank",
   EXCHANGE: "exchange",
   CRYPTO_EXCHANGE: "crypto-exchange",
+  OTHER: "other",
 };
 
 const FILTER_PROVIDER_TYPE = {
@@ -9,6 +10,7 @@ const FILTER_PROVIDER_TYPE = {
   BANKS: "banks",
   EXCHANGES: "exchanges",
   CRYPTO_EXCHANGES: "crypto-exchanges",
+  OTHER: "other",
 };
 
 const SORT_OPTIONS = {
@@ -229,7 +231,7 @@ class RateProvider {
       throw new Error("currencyCode must be an instance of CurrencyCode");
     }
     return this.rates.find(
-      (rate) => rate.getForeignCurrency().getCode() === currencyCode.getCode()
+      (rate) => rate.getForeignCurrency().getCode() === currencyCode.getCode(),
     );
   }
 
@@ -266,6 +268,12 @@ const bankNames = [
   "MONETA",
   "Oberbank AG",
   "Česká spořitelna",
+];
+
+const exchangeNames = [
+  "Směnárna Nekázanka Exchange",
+  "Směnárna PETRA FINANCE",
+  "Exchange VIP",
 ];
 
 const phoneNumberData = [
@@ -305,13 +313,13 @@ async function fetchAllProviderRatesData() {
     });
     if (!response.ok) {
       throw new Error(
-        `HTTP error! Status: ${response.status}, Status Text: ${response.statusText}`
+        `HTTP error! Status: ${response.status}, Status Text: ${response.statusText}`,
       );
     }
     const data = await response.json();
     if (!Array.isArray(data) || data.length === 0 || !data[0].kurzy) {
       throw new Error(
-        "Invalid API response structure: Expected an array with 'kurzy' properties"
+        "Invalid API response structure: Expected an array with 'kurzy' properties",
       );
     }
     localStorage.setItem("apiData", JSON.stringify(data));
@@ -346,36 +354,35 @@ function createRates(kurzy, isCNB) {
         return new CurrencyRate(
           currencyCode,
           parseFloat(middleRate),
-          parseFloat(middleRate)
+          parseFloat(middleRate),
         );
       }
       const buyRate =
         rateData.dev_nakup !== null && rateData.dev_nakup !== undefined
           ? parseFloat(rateData.dev_nakup)
           : rateData.val_nakup !== null && rateData.val_nakup !== undefined
-          ? parseFloat(rateData.val_nakup)
-          : null;
+            ? parseFloat(rateData.val_nakup)
+            : null;
       const sellRate =
         rateData.dev_prodej !== null && rateData.dev_prodej !== undefined
           ? parseFloat(rateData.dev_prodej)
           : rateData.val_prodej !== null && rateData.val_prodej !== undefined
-          ? parseFloat(rateData.val_prodej)
-          : null;
+            ? parseFloat(rateData.val_prodej)
+            : null;
       if (buyRate === null || sellRate === null) return null;
       return new CurrencyRate(currencyCode, buyRate, sellRate);
     })
     .filter((rate) => rate !== null);
 }
 
-function createProvider(name, rates, date, phoneNumber, isBank) {
-  const type = isBank ? "bank" : "exchange";
+function createProvider(name, rates, date, phoneNumber, type) {
   return new RateProvider(
     name,
     new CurrencyCode("CZK"),
     rates,
     date,
     phoneNumber,
-    type
+    type,
   );
 }
 
@@ -398,14 +405,18 @@ function processProviderData(data) {
     ) {
       return null;
     }
-    const isBank = bankNames.includes(data.banka);
+    const type = bankNames.includes(data.banka)
+      ? PROVIDER_TYPE.BANK
+      : exchangeNames.includes(data.banka)
+        ? PROVIDER_TYPE.EXCHANGE
+        : PROVIDER_TYPE.OTHER;
     const isCNB = data.banka === "Česká národní banka";
     const rates = createRates(data.kurzy, isCNB);
     if (rates.length === 0) {
       return null;
     }
     const phoneNumber = getPhoneNumber(data.banka, phoneNumberData);
-    return createProvider(data.banka, rates, data.denc, phoneNumber, isBank);
+    return createProvider(data.banka, rates, data.denc, phoneNumber, type);
   } catch (error) {
     console.error(`Error processing provider ${data.banka}:`, error);
     return null;
@@ -457,13 +468,15 @@ class RateProviderFilterService {
             return currentProviderType === PROVIDER_TYPE.EXCHANGE;
           } else if (providerType === FILTER_PROVIDER_TYPE.CRYPTO_EXCHANGES) {
             return currentProviderType === PROVIDER_TYPE.CRYPTO_EXCHANGE;
+          } else if (providerType === FILTER_PROVIDER_TYPE.OTHER) {
+            return currentProviderType === PROVIDER_TYPE.OTHER;
           }
         });
       }
       if (searchTerm) {
         const lowerSearchTerm = searchTerm.toLowerCase();
         filteredProviders = filteredProviders.filter((provider) =>
-          provider.getName().toLowerCase().includes(lowerSearchTerm)
+          provider.getName().toLowerCase().includes(lowerSearchTerm),
         );
       }
       if (currency && currency !== "All currencies" && currency !== "") {
@@ -479,7 +492,7 @@ class RateProviderFilterService {
               [existingRate],
               provider.getRatesDate(),
               provider.getPhoneNumber(),
-              provider.getType()
+              provider.getType(),
             );
           })
           .filter((provider) => provider !== null);
@@ -495,7 +508,7 @@ class RateProviderFilterService {
         this.sortByRate(
           filteredProviders,
           currency,
-          sortType === SORT_OPTIONS.BEST_BUY ? "buy" : "sell"
+          sortType === SORT_OPTIONS.BEST_BUY ? "buy" : "sell",
         );
       }
 
@@ -599,14 +612,14 @@ class CurrencySelector {
       initialSelection = null;
     });
     document.addEventListener("click", (event) =>
-      this.handleClickOutside(event)
+      this.handleClickOutside(event),
     );
   }
 
   handleInput() {
     const userInput = this.inputElement.value.toUpperCase().trim();
     const filteredCodes = this.allCurrencyCodes.filter((code) =>
-      code.toUpperCase().includes(userInput)
+      code.toUpperCase().includes(userInput),
     );
     this.populateDropdown(filteredCodes);
   }
@@ -636,7 +649,7 @@ class CurrencySelector {
     this.inputElement.value =
       selectedCode === CurrencySelector.ALL_OPTION ? "" : selectedCode;
     this.onSelectCallback?.(
-      selectedCode === CurrencySelector.ALL_OPTION ? null : selectedCode
+      selectedCode === CurrencySelector.ALL_OPTION ? null : selectedCode,
     );
     this.hideDropdown();
   }
@@ -674,7 +687,7 @@ class FilterHandler {
       (selectedCode) => {
         this.filterState.setCurrency(selectedCode || "");
         this.applyAllFilters();
-      }
+      },
     );
     this.noResultsMessage = document.createElement("div");
     this.noResultsMessage.className = "no-results";
@@ -739,7 +752,7 @@ class FilterHandler {
     } else {
       this.noResultsMessage.remove();
       providers.forEach((provider) =>
-        this.providerDisplay.displayProvider(provider)
+        this.providerDisplay.displayProvider(provider),
       );
     }
   }
@@ -872,7 +885,7 @@ const filterState = new FilterState();
 const filterHandler = new FilterHandler(
   providerFilterService,
   providerDisplay,
-  filterState
+  filterState,
 );
 new LogoHandler(filterHandler);
 

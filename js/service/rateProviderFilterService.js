@@ -46,6 +46,8 @@ export class RateProviderFilterService {
             return currentProviderType === PROVIDER_TYPE.EXCHANGE;
           } else if (providerType === FILTER_PROVIDER_TYPE.CRYPTO_EXCHANGES) {
             return currentProviderType === PROVIDER_TYPE.CRYPTO_EXCHANGE;
+          } else if (providerType === FILTER_PROVIDER_TYPE.OTHER) {
+            return currentProviderType === PROVIDER_TYPE.OTHER;
           }
         });
       }
@@ -53,7 +55,7 @@ export class RateProviderFilterService {
       if (searchTerm) {
         const lowerSearchTerm = searchTerm.toLowerCase();
         filteredProviders = filteredProviders.filter((provider) =>
-          provider.getName().toLowerCase().includes(lowerSearchTerm)
+          provider.getName().toLowerCase().includes(lowerSearchTerm),
         );
       }
 
@@ -70,7 +72,7 @@ export class RateProviderFilterService {
               [existingRate],
               provider.getRatesDate(),
               provider.getPhoneNumber(),
-              provider.getType()
+              provider.getType(),
             );
           })
           .filter((provider) => provider !== null);
@@ -86,7 +88,7 @@ export class RateProviderFilterService {
         this.sortByRate(
           filteredProviders,
           currency,
-          sortType === SORT_OPTIONS.BEST_BUY ? "buy" : "sell"
+          sortType === SORT_OPTIONS.BEST_BUY ? "buy" : "sell",
         );
       }
 

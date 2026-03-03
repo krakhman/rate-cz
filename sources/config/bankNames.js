@@ -17,3 +17,13 @@ export const bankNames = [
   "Oberbank AG",
   "Česká spořitelna",
 ];
+
+/**
+ * List of supported exchange names for rate providers
+ * @constant {string[]}
+ */
+const exchangeNames = [
+  "Směnárna Nekázanka Exchange",
+  "Směnárna PETRA FINANCE",
+  "Exchange VIP",
+];

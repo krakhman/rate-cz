@@ -24,7 +24,7 @@ async function fetchAllProviderRatesData() {
 
     if (!response.ok) {
       throw new Error(
-        `HTTP error! Status: ${response.status}, Status Text: ${response.statusText}`
+        `HTTP error! Status: ${response.status}, Status Text: ${response.statusText}`,
       );
     }
 
@@ -32,7 +32,7 @@ async function fetchAllProviderRatesData() {
 
     if (!Array.isArray(data) || data.length === 0 || !data[0].kurzy) {
       throw new Error(
-        "Invalid API response structure: Expected an array with 'kurzy' properties"
+        "Invalid API response structure: Expected an array with 'kurzy' properties",
       );
     }
 
@@ -76,7 +76,7 @@ function createRates(kurzy, isCNB) {
         return new CurrencyRate(
           currencyCode,
           parseFloat(middleRate),
-          parseFloat(middleRate)
+          parseFloat(middleRate),
         );
       }
 
@@ -84,15 +84,15 @@ function createRates(kurzy, isCNB) {
         rateData.dev_nakup !== null && rateData.dev_nakup !== undefined
           ? parseFloat(rateData.dev_nakup)
           : rateData.val_nakup !== null && rateData.val_nakup !== undefined
-          ? parseFloat(rateData.val_nakup)
-          : null;
+            ? parseFloat(rateData.val_nakup)
+            : null;
 
       const sellRate =
         rateData.dev_prodej !== null && rateData.dev_prodej !== undefined
           ? parseFloat(rateData.dev_prodej)
           : rateData.val_prodej !== null && rateData.val_prodej !== undefined
-          ? parseFloat(rateData.val_prodej)
-          : null;
+            ? parseFloat(rateData.val_prodej)
+            : null;
 
       if (buyRate === null || sellRate === null) return null;
       return new CurrencyRate(currencyCode, buyRate, sellRate);
@@ -106,18 +106,17 @@ function createRates(kurzy, isCNB) {
  * @param {CurrencyRate[]} rates - Array of currency rates
  * @param {string} date - Rate date string
  * @param {string|null} phoneNumber - Provider contact number
- * @param {boolean} isBank - Whether provider is a bank
+ * @param {string} type - Provider type (from PROVIDER_TYPE)
  * @returns {RateProvider} New provider instance
  */
-function createProvider(name, rates, date, phoneNumber, isBank) {
-  const type = isBank ? "bank" : "exchange";
+function createProvider(name, rates, date, phoneNumber, type) {
   return new RateProvider(
     name,
     new CurrencyCode("CZK"),
     rates,
     date,
     phoneNumber,
-    type
+    type,
   );
 }
 
@@ -152,7 +151,11 @@ function processProviderData(data) {
     ) {
       return null;
     }
-    const isBank = bankNames.includes(data.banka);
+    const type = bankNames.includes(data.banka)
+      ? PROVIDER_TYPE.BANK
+      : exchangeNames.includes(data.banka)
+        ? PROVIDER_TYPE.EXCHANGE
+        : PROVIDER_TYPE.OTHER;
     const isCNB = data.banka === "Česká národní banka";
     const rates = createRates(data.kurzy, isCNB);
 
@@ -161,7 +164,7 @@ function processProviderData(data) {
     }
 
     const phoneNumber = getPhoneNumber(data.banka, phoneNumberData);
-    return createProvider(data.banka, rates, data.denc, phoneNumber, isBank);
+    return createProvider(data.banka, rates, data.denc, phoneNumber, type);
   } catch (error) {
     console.error(`Error processing provider ${data.banka}:`, error);
     return null;
