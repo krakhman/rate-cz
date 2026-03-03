@@ -272,6 +272,7 @@ const exchangeNames = [
   "Směnárna Nekázanka Exchange",
   "Směnárna PETRA FINANCE",
   "Exchange VIP",
+  "Eurowex",
 ];
 
 const phoneNumberData = [
